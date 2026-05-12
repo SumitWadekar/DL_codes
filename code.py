@@ -1,9 +1,11 @@
-import tensorflow as tf
-from tensorflow.keras import layers
-from ultralytics import YOLO
-import matplotlib.pyplot as plt
-import numpy as np
-import cv2
+def imports():
+    import tensorflow as tf
+    from tensorflow.keras import layers
+    from ultralytics import YOLO
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import cv2  
+
 
 # DATASETS USED
 # MNIST subset
@@ -15,6 +17,7 @@ import cv2
 # MLP
 
 def MLP():
+    imports()
     (x_train,y_train),(x_test,y_test)=tf.keras.datasets.mnist.load_data()
 
     x_train=x_train[:10000]
@@ -50,6 +53,7 @@ def MLP():
 # CNN
 
 def CNN():
+    imports()
     (x_train,y_train),(x_test,y_test)=tf.keras.datasets.cifar10.load_data()
 
     x_train=x_train[:5000]
@@ -221,17 +225,21 @@ def Analysis():
 
 def ObjectDetection():
     model=YOLO('yolov8n.pt')
-
     results=model('test.jpg')
-
     names=model.names
-
     for box in results[0].boxes:
         cls=int(box.cls[0])
         conf=float(box.conf[0])
 
         print('Object:',names[cls])
         print('Confidence:',conf)
+    import matplotlib.pyplot as plt
+    annotated_image = results[0].plot()
+    plt.figure(figsize=(10, 8))
+    plt.imshow(annotated_image[:, :, ::-1]) # OpenCV reads images as BGR, matplotlib expects RGB
+    plt.axis('off')
+    plt.title('Detected Objects')
+    plt.show()
 
 
 # Simple RNN
@@ -301,7 +309,6 @@ def LSTM():
     x=np.array(x)/float(len(chars))
     x=np.reshape(x,(len(x),10,1))
     y=np.array(y)
-    y=np.random.rand(1000,1)
 
     model=tf.keras.Sequential([
         layers.LSTM(32,input_shape=(10,1)),
@@ -336,7 +343,7 @@ def GRU():
     x=np.array(x)/float(len(chars))
     x=np.reshape(x,(len(x),10,1))
     y=np.array(y)
-    y=np.random.rand(1000,1)
+    # y=np.random.rand(1000,1)
 
     model=tf.keras.Sequential([
         layers.GRU(32,input_shape=(10,1)),
@@ -354,10 +361,27 @@ def GRU():
 # GAN
 
 def GAN():
+
+    (x_train,_),(_,_) = tf.keras.datasets.mnist.load_data()
+
+    x_train=x_train[:10000]/255.0
+    x_train=x_train.reshape(10000,784)
+
     generator=tf.keras.Sequential([
         layers.Dense(128,activation='relu',input_shape=(100,)),
         layers.Dense(784,activation='sigmoid')
     ])
+
+    discriminator=tf.keras.Sequential([
+        layers.Dense(128,activation='relu',input_shape=(784,)),
+        layers.Dense(1,activation='sigmoid')
+    ])
+
+    discriminator.compile(
+        optimizer='adam',
+        loss='binary_crossentropy',
+        metrics=['accuracy']
+    )
 
     noise=np.random.normal(0,1,(1,100))
 
